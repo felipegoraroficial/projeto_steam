@@ -2,95 +2,95 @@ from airflow import DAG
 from datetime import datetime
 import pendulum
 from airflow.operators.python import PythonOperator
-from steam.extract.extract_user import extract_user_steam
-from steam.bronze.user_bronze import bronze_user_steam
-from steam.silver.user_silver import silver_user_steam
-from steam.extract.extract_wishlist import extract_wishlist_steam
-from steam.bronze.wish_bronze import bronze_wishlist_steam
-from steam.silver.wish_silver import silver_wish_steam
-from steam.gold.user_gold import gold_user_steam
-from steam.gold.wish_gold import gold_wish_steam
-from steam.gold.gold_union import union_gold
+from airflow.providers.papermill.operators.papermill import PapermillOperator
 
-
-
-# Defina o fuso horário desejado (São Paulo, Brasil)
 local_tz = pendulum.timezone('America/Sao_Paulo')
 
+yesterday = pendulum.now(local_tz).subtract(days=1).date().strftime('%Y-%m-%d')
+
 default_args = {
-    "owner": "felipe.pegoraro",
+    "owner": ["fececa-dev"],
     'email': ['felipepegoraro93@gmail.com'],
     'email_on_retry': False,
     'email_on_failure': True,
-    "start_date": datetime(2024, 6, 24, tzinfo=local_tz),
+    "start_date": datetime.strptime(yesterday, '%Y-%m-%d'),
 }
 
 dag = DAG(
     "steam",
     default_args=default_args,
-    schedule_interval="0 0 * * *",
+    schedule_interval= "@hourly",
     catchup=False
 )
 
 # EXTRACT STEP
 
-user1 = PythonOperator(
+user1 = PapermillOperator(
     task_id='user_extract',
-    python_callable=extract_user_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/inbound/inbound_user.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/inbound/inbound_user.ipynb',
     dag=dag
 )
 
-wish1 = PythonOperator(
+wish1 = PapermillOperator(
     task_id='wish_extract',
-    python_callable=extract_wishlist_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/inbound/inbound_wishlist.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/inbound/inbound_wishlist.ipynb',
     dag=dag
 )
 
 # BRONZE STEP
 
-user2 = PythonOperator(
+user2 = PapermillOperator(
     task_id='bronze_user',
-    python_callable=bronze_user_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/bronze/user_bronze.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/bronze/user_bronze.ipynb',
     dag=dag
 )
 
-wish2 = PythonOperator(
+wish2 = PapermillOperator(
     task_id='bronze_wish',
-    python_callable=bronze_wishlist_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/bronze/wish_bronze.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/bronze/wish_bronze.ipynb',
     dag=dag
 )
 
 # SILVER STEP
 
-user3 = PythonOperator(
+user3 = PapermillOperator(
     task_id='silver_user',
-    python_callable=silver_user_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/silver/user_silver.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/silver/user_silver.ipynb',
     dag=dag
 )
 
-wish3 = PythonOperator(
+wish3 = PapermillOperator(
     task_id='silver_wish',
-    python_callable=silver_wish_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/silver/wish_silver.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/silver/wish_silver.ipynb',
     dag=dag
 )
 
 # GOLD STEP
 
-user4 = PythonOperator(
+user4 = PapermillOperator(
     task_id='gold_user',
-    python_callable=gold_user_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/gold/user_gold.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/gold/user_gold.ipynb',
     dag=dag
 )
 
-wish4 = PythonOperator(
+wish4 = PapermillOperator(
     task_id='gold_wish',
-    python_callable=gold_wish_steam,
+    input_nb="/home/fececa/dev-env/projeto_steam/gold/wish_gold.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/gold/wish_gold.ipynb',
     dag=dag
 )
 
-steam = PythonOperator(
+steam = PapermillOperator(
     task_id='union',
-    python_callable=union_gold,
+    input_nb="/home/fececa/dev-env/projeto_steam/gold/gold_union.ipynb",
+    output_nb='/home/fececa/dev-env/projeto_steam/gold/gold_union.ipynb',
     dag=dag
 )
 
