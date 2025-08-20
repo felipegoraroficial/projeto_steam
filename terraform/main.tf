@@ -1,7 +1,7 @@
 # Criação do Resource Group
 resource "azurerm_resource_group" "rgroup" {
   name     = "steamproject"
-  location = "East US"
+  location = "Australia East"
 
 }
 
@@ -74,25 +74,9 @@ resource "azurerm_storage_data_lake_gen2_path" "bronze" {
   resource           = "directory"
 }
 
-# Criação do diretório silver no Data Lake Gen2
-resource "azurerm_storage_data_lake_gen2_path" "silver" {
-  storage_account_id = azurerm_storage_account.stracc.id
-  filesystem_name    = azurerm_storage_container.containerstracc.name
-  path               = "silver"
-  resource           = "directory"
-}
-
-# Criação do diretório gold no Data Lake Gen2
-resource "azurerm_storage_data_lake_gen2_path" "gold" {
-  storage_account_id = azurerm_storage_account.stracc.id
-  filesystem_name    = azurerm_storage_container.containerstracc.name
-  path               = "gold"
-  resource           = "directory"
-}
-
 # Criação do Key Vault
 resource "azurerm_key_vault" "kv" {
-  name                       = "steamkeyvault"
+  name                       = "steamkeyvaultproject"
   location                   = azurerm_resource_group.rgroup.location
   resource_group_name        = azurerm_resource_group.rgroup.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
@@ -102,7 +86,7 @@ resource "azurerm_key_vault" "kv" {
   access_policy {
     tenant_id          = data.azurerm_client_config.current.tenant_id
     object_id          = data.azurerm_client_config.current.object_id
-    secret_permissions = ["Get", "Set", "List"]
+    secret_permissions = ["Get", "Set", "List", "Delete"]
   }
 }
 
@@ -182,13 +166,17 @@ resource "azurerm_linux_function_app" "funcsteam" {
     application_stack {
       python_version = "3.10"
     }
+    cors {
+      allowed_origins = ["https://portal.azure.com"]
+    }
   }
 
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME"              = "python"
-    "AzureStorageConnection"                = azurerm_storage_account.stracc.primary_connection_string
-    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.app_insights.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.app_insights.connection_string
+    "FUNCTIONS_WORKER_RUNTIME" = "python"
+    "AzureStorageConnection"   = azurerm_storage_account.stracc.primary_connection_string
+    "API_KEY"                  = var.steam_key
+    "STEAM_ID"                 = var.steam_id
+
   }
 }
 
@@ -238,8 +226,8 @@ resource "databricks_user" "felipe_user" {
 resource "databricks_cluster" "dtb_cluster" {
   cluster_name            = "felipe_cluster"
   spark_version           = "16.4.x-scala2.12"
-  node_type_id            = "Standard_F4"
-  driver_node_type_id     = "Standard_F4"
+  node_type_id            = "Standard_D4s_v3"
+  driver_node_type_id     = "Standard_D4s_v3"
   autotermination_minutes = 10
   enable_elastic_disk     = true
   single_user_name        = databricks_user.felipe_user.user_name
