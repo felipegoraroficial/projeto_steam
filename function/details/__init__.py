@@ -6,8 +6,33 @@ import requests
 from datetime import datetime
 from azure.storage.blob import BlobServiceClient
 
-storage_connection_string = os.environ.get("AzureStorageConnection")
-container_name = "steam"
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+
+    name = req.params.get('name')
+    if not name:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            name = req_body.get('name')
+
+    if name:
+        # Recupera e envia dados para o blob dentro da função
+        storage_connection_string = os.environ.get("AzureStorageConnection")
+        container_name = "steam"
+
+        blob_list = get_latest_json_data_as_list(storage_connection_string, container_name, "inbound/user")
+        if blob_list:
+            get_game_ids(storage_connection_string, container_name, blob_list)
+
+        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
+    else:
+        return func.HttpResponse(
+            "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+            status_code=200
+        )
 
 def get_latest_json_data_as_list(storage_connection_string, container_name, directory_path):
     try:
@@ -41,7 +66,7 @@ def get_latest_json_data_as_list(storage_connection_string, container_name, dire
         logging.error(f"Erro ao obter ou processar o blob JSON mais recente: {e}")
         return []
 
-def send_to_blobstorage(storage_connection_string, games, name):
+def send_to_blobstorage(storage_connection_string, container_name, games, name):
     try:
         blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
         container_client = blob_service_client.get_container_client(container_name)
@@ -60,7 +85,7 @@ def send_to_blobstorage(storage_connection_string, games, name):
     except Exception as e:
         logging.error(f"Erro no envio ao Blob Storage: {e}")
 
-def get_game_ids(storage_connection_string, blobs_list):
+def get_game_ids(storage_connection_string, container_name, blobs_list):
 
     appids = [item['appid'] for item in blobs_list if 'appid' in item]
 
@@ -68,19 +93,5 @@ def get_game_ids(storage_connection_string, blobs_list):
         app_details_response = requests.get(f'https://store.steampowered.com/api/appdetails?appids={blob_name}')
         app_details_data = app_details_response.json()
         for value in app_details_data.values():
-            send_to_blobstorage(storage_connection_string, value, blob_name)
+            send_to_blobstorage(storage_connection_string, container_name, value, blob_name)
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-
-@app.route(route="details")
-def main(req: func.HttpRequest) -> func.HttpResponse:
-    try:
-        blob_list = get_latest_json_data_as_list(storage_connection_string, container_name, "inbound/user")
-        if blob_list:
-            get_game_ids(storage_connection_string, blob_list)
-            return func.HttpResponse("Detalhes dos jogos enviados ao Blob Storage.", status_code=200)
-        else:
-            return func.HttpResponse("Nenhum blob encontrado.", status_code=204)
-    except Exception as e:
-        logging.error(e)
-        return func.HttpResponse(f"Erro interno: {e}", status_code=500)
