@@ -1,0 +1,9 @@
+{
+	"name": "steamadf",
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "54b763c2-9464-47e8-bca6-30a2b3af4202",
+		"tenantId": "1a7a4b2b-0e66-4ce2-b5cc-5916ccca0206"
+	}
+}
