@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "app_user",
+				"name": "app_details",
 				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
@@ -24,7 +24,7 @@
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "app_user",
+						"activity": "app_details",
 						"dependencyConditions": [
 							"Succeeded"
 						]
