@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "steamadf"
+		},
+		"AzureDatabricks_accessToken": {
+			"value": ""
+		},
+		"AzureFunction_functionKey": {
+			"value": ""
+		},
+		"AzureFunction_properties_typeProperties_functionAppUrl": {
+			"value": "https://appfuncsteam.azurewebsites.net"
+		},
+		"trigger_details_properties_typeProperties_scope": {
+			"value": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount"
+		}
+	}
+}
