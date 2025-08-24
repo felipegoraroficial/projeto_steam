@@ -49,7 +49,7 @@
 						"typeProperties": {
 							"method": "GET",
 							"headers": {},
-							"url": "https://appfuncsteam.azurewebsites.net/api/details?"
+							"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
 						}
 					},
 					{
@@ -272,7 +272,7 @@
 						"value": "[parameters('AzureDatabricks_accessToken')]"
 					},
 					"newClusterNodeType": "Standard_D4s_v3",
-					"newClusterNumOfWorker": "1:2",
+					"newClusterNumOfWorker": "1",
 					"newClusterSparkConf": {
 						"fs.azure.account.key.steamstorageaccount.dfs.core.windows.net": "{{secrets/steam-keyvault-scope/steam-storage-account-key}}"
 					},
@@ -280,7 +280,7 @@
 						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
 					},
 					"newClusterVersion": "16.4.x-scala2.12",
-					"clusterOption": "Autoscaling",
+					"clusterOption": "Fixed",
 					"newClusterInitScripts": [],
 					"dataSecurityMode": "SINGLE_USER"
 				}
