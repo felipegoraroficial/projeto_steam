@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "GET",
-					"url": "https://appfuncsteam.azurewebsites.net/api/details?"
+					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
 				}
 			},
 			{
