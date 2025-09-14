@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "user",
+				"name": "playtime",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"policy": {
