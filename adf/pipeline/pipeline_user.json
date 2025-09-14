@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "app_user",
+				"name": "playtime",
 				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "GET",
-					"url": "https://appfuncsteam.azurewebsites.net/api/users?name=users"
+					"url": "https://appfuncsteam.azurewebsites.net/api/playtime?name=playtime"
 				}
 			},
 			{
@@ -24,7 +24,7 @@
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "app_user",
+						"activity": "playtime",
 						"dependencyConditions": [
 							"Succeeded"
 						]
