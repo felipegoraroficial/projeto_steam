@@ -1,0 +1,77 @@
+{
+	"name": "pipeline_steam",
+	"properties": {
+		"activities": [
+			{
+				"name": "playtime",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://appfuncsteam.azurewebsites.net/api/playtime?name=playtime"
+				}
+			},
+			{
+				"name": "DLT",
+				"type": "DatabricksJob",
+				"dependsOn": [
+					{
+						"activity": "playtime",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "714911832001617"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "details",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-08-21T13:05:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
