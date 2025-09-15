@@ -54,7 +54,7 @@ def send_to_blobstorage(storage_connection_string, container_name, games):
             if "ContainerAlreadyExists" not in str(e):
                 logging.error(f"Erro ao criar o container '{container_name}': {e}")
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        blob_name = f"inbound/user/{timestamp}.json"
+        blob_name = f"inbound/playtime/{timestamp}.json"
         json_output = json.dumps(games, indent=4, ensure_ascii=False)
         blob_client = container_client.get_blob_client(blob_name)
         blob_client.upload_blob(json_output, overwrite=True)
