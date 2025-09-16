@@ -23,7 +23,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         storage_connection_string = os.environ.get("AzureStorageConnection")
         container_name = "steam"
 
-        blob_list = get_latest_json_data_as_list(storage_connection_string, container_name, "inbound/user")
+        blob_list = get_latest_json_data_as_list(storage_connection_string, container_name, "inbound/playtime")
         if blob_list:
             get_game_ids(storage_connection_string, container_name, blob_list)
 

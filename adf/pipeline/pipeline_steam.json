@@ -1,9 +1,9 @@
 {
-	"name": "pipeline_user",
+	"name": "pipeline_steam",
 	"properties": {
 		"activities": [
 			{
-				"name": "app_user",
+				"name": "playtime",
 				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
@@ -16,15 +16,21 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "GET",
-					"url": "https://appfuncsteam.azurewebsites.net/api/users?name=users"
+					"url": "https://appfuncsteam.azurewebsites.net/api/playtime?name=playtime"
 				}
 			},
 			{
-				"name": "user_bronze",
-				"type": "DatabricksNotebook",
+				"name": "DLT",
+				"type": "DatabricksJob",
 				"dependsOn": [
 					{
-						"activity": "app_user",
+						"activity": "playtime",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "details",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -39,7 +45,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/bronze/user"
+					"jobId": "714447956434506"
 				},
 				"linkedServiceName": {
 					"referenceName": "AzureDatabricks",
@@ -47,16 +53,9 @@
 				}
 			},
 			{
-				"name": "user_silver",
-				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "user_bronze",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"name": "details",
+				"type": "WebActivity",
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -66,11 +65,8 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/silver/user"
-				},
-				"linkedServiceName": {
-					"referenceName": "AzureDatabricks",
-					"type": "LinkedServiceReference"
+					"method": "GET",
+					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
 				}
 			}
 		],

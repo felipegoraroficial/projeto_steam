@@ -1,12 +1,12 @@
 {
-	"name": "trigger_user",
+	"name": "trigger_steam",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pipeline_user",
+					"referenceName": "pipeline_steam",
 					"type": "PipelineReference"
 				}
 			}
@@ -16,7 +16,7 @@
 			"recurrence": {
 				"frequency": "Day",
 				"interval": 1,
-				"startTime": "2025-08-22T00:00:00",
+				"startTime": "2025-09-14T00:00:00",
 				"timeZone": "E. South America Standard Time",
 				"schedule": {
 					"minutes": [
