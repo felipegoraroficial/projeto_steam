@@ -304,7 +304,7 @@
 						"     enableCdc: true,",
 						"     mode: 'read',",
 						"     skipInitialLoad: false,",
-						"     documentForm: 'arrayOfDocuments') ~> sourcedetails",
+						"     documentForm: 'singleDocument') ~> sourcedetails",
 						"sourceplaytime sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
