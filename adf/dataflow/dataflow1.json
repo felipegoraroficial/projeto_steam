@@ -35,7 +35,7 @@
 				"          playtime_linux_forever as string,",
 				"          playtime_deck_forever as string,",
 				"          rtime_last_played as string,",
-				"          playtime_disconnected as integer,",
+				"          playtime_disconnected as string,",
 				"          playtime_2weeks as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
