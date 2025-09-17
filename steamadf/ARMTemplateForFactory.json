@@ -41,8 +41,6 @@
 					{
 						"name": "playtime",
 						"type": "WebActivity",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -61,17 +59,9 @@
 					{
 						"name": "DLT",
 						"type": "DatabricksJob",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
-								"activity": "playtime",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "details",
+								"activity": "External Tables",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -96,8 +86,6 @@
 					{
 						"name": "details",
 						"type": "WebActivity",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -118,7 +106,13 @@
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "DLT",
+								"activity": "details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "playtime",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -134,12 +128,14 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "dataflow1",
+								"referenceName": "ingestao_incremental",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
 									"sourceplaytime": {},
-									"sinkplaytime": {}
+									"sourcedetails": {},
+									"sinkplaytime": {},
+									"sinkdetails": {}
 								}
 							},
 							"staging": {},
@@ -149,8 +145,35 @@
 							},
 							"traceLevel": "Fine",
 							"continuationSettings": {
-								"customizedCheckpointKey": "f0a05fa7-6042-49c9-8bd1-f1d82b12122c"
+								"customizedCheckpointKey": "c3c2e665-ed8a-4d9d-ab66-dfce5d064d12"
 							}
+						}
+					},
+					{
+						"name": "External Tables",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Ingesta-Incremental",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/bronze/external-data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
 						}
 					}
 				],
@@ -162,11 +185,11 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/ingestao_incremental')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Orc1')]",
+			"name": "[concat(parameters('factoryName'), '/bronzedetails')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -175,16 +198,65 @@
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "Orc",
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "bronze/details",
+						"fileSystem": "steam"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bronzeplaytime')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"folderPath": "bronze/playtime",
 						"fileSystem": "steam"
 					},
-					"enablePhysicalSchema": true
+					"compressionCodec": "snappy"
 				},
 				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inboundetails')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "inbound/details",
+						"fileSystem": "steam"
+					}
+				},
+				"schema": {}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
@@ -358,7 +430,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"name": "[concat(parameters('factoryName'), '/ingestao_incremental')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -371,12 +443,19 @@
 								"type": "DatasetReference"
 							},
 							"name": "sourceplaytime"
+						},
+						{
+							"dataset": {
+								"referenceName": "inboundetails",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedetails"
 						}
 					],
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "Orc1",
+								"referenceName": "bronzeplaytime",
 								"type": "DatasetReference"
 							},
 							"name": "sinkplaytime",
@@ -384,42 +463,67 @@
 								"referenceName": "AzureDataLakeStorage",
 								"type": "LinkedServiceReference"
 							}
+						},
+						{
+							"dataset": {
+								"referenceName": "bronzedetails",
+								"type": "DatasetReference"
+							},
+							"name": "sinkdetails"
 						}
 					],
 					"transformations": [],
 					"scriptLines": [
 						"source(output(",
-						"          appid as integer,",
-						"          playtime_forever as integer,",
-						"          playtime_windows_forever as integer,",
-						"          playtime_mac_forever as integer,",
-						"          playtime_linux_forever as integer,",
-						"          playtime_deck_forever as integer,",
-						"          rtime_last_played as integer,",
-						"          playtime_disconnected as integer,",
-						"          playtime_2weeks as integer",
+						"          appid as string,",
+						"          playtime_forever as string,",
+						"          playtime_windows_forever as string,",
+						"          playtime_mac_forever as string,",
+						"          playtime_linux_forever as string,",
+						"          playtime_deck_forever as string,",
+						"          rtime_last_played as string,",
+						"          playtime_disconnected as string,",
+						"          playtime_2weeks as string",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     enableCdc: true,",
 						"     mode: 'read',",
-						"     skipInitialLoad: true,",
+						"     skipInitialLoad: false,",
 						"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     documentForm: 'arrayOfDocuments') ~> sourcedetails",
 						"sourceplaytime sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     format: 'parquet',",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+						"     skipDuplicateMapOutputs: true) ~> sinkplaytime",
+						"sourcedetails sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkdetails"
 					]
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/inboundplaytime')]",
-				"[concat(variables('factoryId'), '/datasets/Orc1')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+				"[concat(variables('factoryId'), '/datasets/inboundetails')]",
+				"[concat(variables('factoryId'), '/datasets/bronzeplaytime')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]",
+				"[concat(variables('factoryId'), '/datasets/bronzedetails')]"
 			]
 		}
 	]
