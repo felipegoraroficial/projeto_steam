@@ -1,0 +1,58 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "inboundplaytime",
+						"type": "DatasetReference"
+					},
+					"name": "sourceplaytime"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Orc1",
+						"type": "DatasetReference"
+					},
+					"name": "sinkplaytime",
+					"rejectedDataLinkedService": {
+						"referenceName": "AzureDataLakeStorage",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          appid as integer,",
+				"          playtime_forever as integer,",
+				"          playtime_windows_forever as integer,",
+				"          playtime_mac_forever as integer,",
+				"          playtime_linux_forever as integer,",
+				"          playtime_deck_forever as integer,",
+				"          rtime_last_played as integer,",
+				"          playtime_disconnected as integer,",
+				"          playtime_2weeks as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+				"sourceplaytime sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+			]
+		}
+	}
+}

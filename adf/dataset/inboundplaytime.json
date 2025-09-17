@@ -1,0 +1,50 @@
+{
+	"name": "inboundplaytime",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "inbound/playtime",
+				"fileSystem": "steam"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"appid": {
+					"type": "integer"
+				},
+				"playtime_forever": {
+					"type": "integer"
+				},
+				"playtime_windows_forever": {
+					"type": "integer"
+				},
+				"playtime_mac_forever": {
+					"type": "integer"
+				},
+				"playtime_linux_forever": {
+					"type": "integer"
+				},
+				"playtime_deck_forever": {
+					"type": "integer"
+				},
+				"rtime_last_played": {
+					"type": "integer"
+				},
+				"playtime_disconnected": {
+					"type": "integer"
+				},
+				"playtime_2weeks": {
+					"type": "integer"
+				}
+			}
+		}
+	}
+}

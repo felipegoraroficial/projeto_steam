@@ -5,6 +5,8 @@
 			{
 				"name": "playtime",
 				"type": "WebActivity",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -22,6 +24,8 @@
 			{
 				"name": "DLT",
 				"type": "DatabricksJob",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "playtime",
@@ -55,6 +59,8 @@
 			{
 				"name": "details",
 				"type": "WebActivity",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -67,6 +73,40 @@
 				"typeProperties": {
 					"method": "GET",
 					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
+				}
+			},
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DLT",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "dataflow1",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "f0a05fa7-6042-49c9-8bd1-f1d82b12122c"
+					}
 				}
 			}
 		],
