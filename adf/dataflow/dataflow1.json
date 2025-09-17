@@ -15,7 +15,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "Orc1",
+						"referenceName": "Parquet1",
 						"type": "DatasetReference"
 					},
 					"name": "sinkplaytime",
@@ -45,6 +45,7 @@
 				"     mode: 'read') ~> sourceplaytime",
 				"sourceplaytime sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     format: 'parquet',",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
