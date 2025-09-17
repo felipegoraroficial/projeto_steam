@@ -1,5 +1,5 @@
 {
-	"name": "Parquet1",
+	"name": "bronzeplaytime",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDataLakeStorage",

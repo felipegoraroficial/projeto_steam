@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "ingestao_incremental",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -15,7 +15,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "Parquet1",
+						"referenceName": "bronzeplaytime",
 						"type": "DatasetReference"
 					},
 					"name": "sinkplaytime",
@@ -41,8 +41,10 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     documentForm: 'arrayOfDocuments',",
-				"     mode: 'read') ~> sourceplaytime",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
 				"sourceplaytime sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
