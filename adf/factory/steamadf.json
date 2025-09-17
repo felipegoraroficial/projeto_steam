@@ -1,5 +1,11 @@
 {
 	"name": "steamadf",
+	"properties": {
+		"globalConfigurations": {
+			"factoryStagingLSReferenceName": "AzureDataLakeStorage",
+			"factoryStagingLSType": "LinkedServiceReference"
+		}
+	},
 	"location": "australiaeast",
 	"identity": {
 		"type": "SystemAssigned",
