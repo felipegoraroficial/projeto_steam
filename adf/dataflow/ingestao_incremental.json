@@ -10,6 +10,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "sourceplaytime"
+				},
+				{
+					"dataset": {
+						"referenceName": "inboundetails",
+						"type": "DatasetReference"
+					},
+					"name": "sourcedetails"
 				}
 			],
 			"sinks": [
@@ -23,6 +30,13 @@
 						"referenceName": "AzureDataLakeStorage",
 						"type": "LinkedServiceReference"
 					}
+				},
+				{
+					"dataset": {
+						"referenceName": "bronzedetails",
+						"type": "DatasetReference"
+					},
+					"name": "sinkdetails"
 				}
 			],
 			"transformations": [],
@@ -45,6 +59,13 @@
 				"     mode: 'read',",
 				"     skipInitialLoad: false,",
 				"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     documentForm: 'arrayOfDocuments') ~> sourcedetails",
 				"sourceplaytime sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
@@ -52,7 +73,15 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+				"     skipDuplicateMapOutputs: true) ~> sinkplaytime",
+				"sourcedetails sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkdetails"
 			]
 		}
 	}

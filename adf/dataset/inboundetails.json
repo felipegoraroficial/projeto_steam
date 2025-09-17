@@ -1,0 +1,19 @@
+{
+	"name": "inboundetails",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "inbound/details",
+				"fileSystem": "steam"
+			}
+		},
+		"schema": {}
+	}
+}
