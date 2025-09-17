@@ -7,6 +7,10 @@
 			"metadata": "Nome do Data Factory",
 			"defaultValue": "steamadf"
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"type": "secureString",
+			"metadata": "Cadeia de caracteres segura para 'accountKey' de 'AzureDataLakeStorage'"
+		},
 		"AzureDatabricks_accessToken": {
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'accessToken' de 'AzureDatabricks'"
@@ -14,6 +18,10 @@
 		"AzureFunction_functionKey": {
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'functionKey' de 'AzureFunction'"
+		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://steamstorageaccount.dfs.core.windows.net/"
 		},
 		"AzureFunction_properties_typeProperties_functionAppUrl": {
 			"type": "string",
@@ -33,6 +41,8 @@
 					{
 						"name": "playtime",
 						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -51,6 +61,8 @@
 					{
 						"name": "DLT",
 						"type": "DatabricksJob",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "playtime",
@@ -84,6 +96,8 @@
 					{
 						"name": "details",
 						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -98,6 +112,46 @@
 							"headers": {},
 							"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
 						}
+					},
+					{
+						"name": "Ingesta-Incremental",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DLT",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceplaytime": {},
+									"sinkplaytime": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "f0a05fa7-6042-49c9-8bd1-f1d82b12122c"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -107,8 +161,106 @@
 				"lastPublishTime": "2025-08-21T13:05:19Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Orc1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Orc",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "bronze/playtime",
+						"fileSystem": "steam"
+					},
+					"enablePhysicalSchema": true
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inboundplaytime')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "inbound/playtime",
+						"fileSystem": "steam"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"appid": {
+							"type": "integer"
+						},
+						"playtime_forever": {
+							"type": "integer"
+						},
+						"playtime_windows_forever": {
+							"type": "integer"
+						},
+						"playtime_mac_forever": {
+							"type": "integer"
+						},
+						"playtime_linux_forever": {
+							"type": "integer"
+						},
+						"playtime_deck_forever": {
+							"type": "integer"
+						},
+						"rtime_last_played": {
+							"type": "integer"
+						},
+						"playtime_disconnected": {
+							"type": "integer"
+						},
+						"playtime_2weeks": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzureDatabricks')]",
@@ -178,7 +330,7 @@
 					"recurrence": {
 						"frequency": "Day",
 						"interval": 1,
-						"startTime": "2025-09-14T00:00:00",
+						"startTime": "2025-09-17T00:00:00",
 						"timeZone": "E. South America Standard Time",
 						"schedule": {
 							"minutes": [
@@ -193,6 +345,81 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/pipeline_steam')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Docker-MySQL')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "inboundplaytime",
+								"type": "DatasetReference"
+							},
+							"name": "sourceplaytime"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Orc1",
+								"type": "DatasetReference"
+							},
+							"name": "sinkplaytime",
+							"rejectedDataLinkedService": {
+								"referenceName": "AzureDataLakeStorage",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          appid as integer,",
+						"          playtime_forever as integer,",
+						"          playtime_windows_forever as integer,",
+						"          playtime_mac_forever as integer,",
+						"          playtime_linux_forever as integer,",
+						"          playtime_deck_forever as integer,",
+						"          rtime_last_played as integer,",
+						"          playtime_disconnected as integer,",
+						"          playtime_2weeks as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: true,",
+						"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+						"sourceplaytime sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/inboundplaytime')]",
+				"[concat(variables('factoryId'), '/datasets/Orc1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
 			]
 		}
 	]

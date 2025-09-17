@@ -7,6 +7,10 @@
 			"metadata": "Nome do Data Factory",
 			"defaultValue": "steamadf"
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"type": "secureString",
+			"metadata": "Cadeia de caracteres segura para 'accountKey' de 'AzureDataLakeStorage'"
+		},
 		"AzureDatabricks_accessToken": {
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'accessToken' de 'AzureDatabricks'"
@@ -14,6 +18,10 @@
 		"AzureFunction_functionKey": {
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'functionKey' de 'AzureFunction'"
+		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://steamstorageaccount.dfs.core.windows.net/"
 		},
 		"AzureFunction_properties_typeProperties_functionAppUrl": {
 			"type": "string",
@@ -46,11 +54,17 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureDataLakeStorage_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage_accountKey')]"
+					},
 					"AzureDatabricks_accessToken": {
 						"value": "[parameters('AzureDatabricks_accessToken')]"
 					},
 					"AzureFunction_functionKey": {
 						"value": "[parameters('AzureFunction_functionKey')]"
+					},
+					"AzureDataLakeStorage_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage_properties_typeProperties_url')]"
 					},
 					"AzureFunction_properties_typeProperties_functionAppUrl": {
 						"value": "[parameters('AzureFunction_properties_typeProperties_functionAppUrl')]"

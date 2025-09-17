@@ -5,11 +5,17 @@
 		"factoryName": {
 			"value": "steamadf"
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"value": ""
+		},
 		"AzureDatabricks_accessToken": {
 			"value": ""
 		},
 		"AzureFunction_functionKey": {
 			"value": ""
+		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"value": "https://steamstorageaccount.dfs.core.windows.net/"
 		},
 		"AzureFunction_properties_typeProperties_functionAppUrl": {
 			"value": "https://appfuncsteam.azurewebsites.net"
