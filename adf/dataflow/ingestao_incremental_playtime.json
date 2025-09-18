@@ -1,5 +1,5 @@
 {
-	"name": "ingestao_incremental",
+	"name": "ingestao_incremental_playtime",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -13,10 +13,10 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "inboundetails",
+						"referenceName": "bronzeplaytime",
 						"type": "DatasetReference"
 					},
-					"name": "sourcedetails"
+					"name": "bronzeplaytime"
 				}
 			],
 			"sinks": [
@@ -25,21 +25,14 @@
 						"referenceName": "bronzeplaytime",
 						"type": "DatasetReference"
 					},
-					"name": "sinkplaytime",
-					"rejectedDataLinkedService": {
-						"referenceName": "AzureDataLakeStorage",
-						"type": "LinkedServiceReference"
-					}
-				},
-				{
-					"dataset": {
-						"referenceName": "bronzedetails",
-						"type": "DatasetReference"
-					},
-					"name": "sinkdetails"
+					"name": "sinkplaytime"
 				}
 			],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "exists"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          appid as string,",
@@ -59,29 +52,33 @@
 				"     mode: 'read',",
 				"     skipInitialLoad: false,",
 				"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          appid as string,",
+				"          playtime_forever as string,",
+				"          playtime_windows_forever as string,",
+				"          playtime_mac_forever as string,",
+				"          playtime_linux_forever as string,",
+				"          playtime_deck_forever as string,",
+				"          rtime_last_played as string,",
+				"          playtime_disconnected as string,",
+				"          playtime_2weeks as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     enableCdc: true,",
-				"     mode: 'read',",
-				"     skipInitialLoad: false,",
-				"     documentForm: 'singleDocument') ~> sourcedetails",
-				"sourceplaytime sink(allowSchemaDrift: true,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'parquet') ~> bronzeplaytime",
+				"sourceplaytime, bronzeplaytime exists(sourceplaytime@appid == bronzeplaytime@appid",
+				"     && sourceplaytime@rtime_last_played == bronzeplaytime@rtime_last_played,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists",
+				"exists sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkplaytime",
-				"sourcedetails sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     format: 'parquet',",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkdetails"
+				"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
 			]
 		}
 	}
