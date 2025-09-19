@@ -3,23 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "playtime",
-				"type": "WebActivity",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"method": "GET",
-					"url": "https://appfuncsteam.azurewebsites.net/api/playtime?name=playtime"
-				}
-			},
-			{
 				"name": "DLT",
 				"type": "DatabricksJob",
 				"dependsOn": [
@@ -47,68 +30,17 @@
 				}
 			},
 			{
-				"name": "details",
-				"type": "WebActivity",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"method": "GET",
-					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
-				}
-			},
-			{
-				"name": "Ingesta-Incremental-playtime",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "playtime",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "ingestao_incremental_playtime",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "7d214cda-a082-4b52-b28f-173ccc33dfa3"
-					}
-				}
-			},
-			{
 				"name": "External Tables",
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "Ingesta-Incremental-playtime",
+						"activity": "Ingesta-playtime",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					},
 					{
-						"activity": "Ingesta-Incremental-details",
+						"activity": "Ingesta-details",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -131,37 +63,35 @@
 				}
 			},
 			{
-				"name": "Ingesta-Incremental-details",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"name": "Ingesta-playtime",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "ingestao_incremental_details",
-						"type": "DataFlowReference"
+					"pipeline": {
+						"referenceName": "ingesta-playtime",
+						"type": "PipelineReference"
 					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Ingesta-details",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ingesta-details",
+						"type": "PipelineReference"
 					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "3c3acb56-c619-464b-9dce-14c843c7ef7f"
-					}
+					"waitOnCompletion": true
 				}
 			}
 		],
