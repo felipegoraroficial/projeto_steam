@@ -63,6 +63,7 @@ A infraestrutura em nuvem foi provisionada e gerenciada utilizando Terraform, ga
 
 A estrutura do Terraform é referente ao modelo abaixo:
 
+```plaintext
 terraform/
 │
 ├── .terraform/                 # Pasta interna do Terraform (plugins, cache, metadados)
@@ -74,6 +75,7 @@ terraform/
 ├── terraform.tfstate.backup     # Backup do estado anterior
 ├── variables.tf                 # Declaração de variáveis utilizadas nos módulos e recursos
 └── versions.tf                  # Definição da versão do Terraform e restrições de provedores
+````
 
 Para executar a construção do ambiente basta executar os seguintes comandos:
 
