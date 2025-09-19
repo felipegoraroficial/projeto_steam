@@ -1,12 +1,12 @@
 {
-	"name": "trigger_steam",
+	"name": "trigger_playtime",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pipeline_steam",
+					"referenceName": "ingesta-playtime",
 					"type": "PipelineReference"
 				}
 			}

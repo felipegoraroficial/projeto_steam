@@ -27,6 +27,10 @@
 			"type": "string",
 			"defaultValue": "https://appfuncsteam.azurewebsites.net"
 		},
+		"trigger_details_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI para a conta de armazenamento contendo os modelos do ARM vinculados"
@@ -68,6 +72,9 @@
 					},
 					"AzureFunction_properties_typeProperties_functionAppUrl": {
 						"value": "[parameters('AzureFunction_properties_typeProperties_functionAppUrl')]"
+					},
+					"trigger_details_properties_typeProperties_scope": {
+						"value": "[parameters('trigger_details_properties_typeProperties_scope')]"
 					}
 				}
 			},

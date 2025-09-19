@@ -1,0 +1,24 @@
+{
+	"name": "trigger_details",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "ingesta-details",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/steam/blobs/inbound/playtime",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
