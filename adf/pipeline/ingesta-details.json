@@ -1,0 +1,59 @@
+{
+	"name": "ingesta-details",
+	"properties": {
+		"activities": [
+			{
+				"name": "details",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
+				}
+			},
+			{
+				"name": "Ingesta-Incremental-details",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ingestao_incremental_details",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "3c3acb56-c619-464b-9dce-14c843c7ef7f"
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}
