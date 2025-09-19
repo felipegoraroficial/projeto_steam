@@ -1,12 +1,12 @@
 {
-	"name": "trigger_steam",
+	"name": "trigger_playtime",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pipeline_steam",
+					"referenceName": "ingesta-playtime",
 					"type": "PipelineReference"
 				}
 			}
@@ -16,7 +16,7 @@
 			"recurrence": {
 				"frequency": "Day",
 				"interval": 1,
-				"startTime": "2025-09-14T00:00:00",
+				"startTime": "2025-09-17T00:00:00",
 				"timeZone": "E. South America Standard Time",
 				"schedule": {
 					"minutes": [

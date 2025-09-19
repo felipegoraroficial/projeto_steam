@@ -7,6 +7,10 @@
 			"metadata": "Nome do Data Factory",
 			"defaultValue": "steamadf"
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"type": "secureString",
+			"metadata": "Cadeia de caracteres segura para 'accountKey' de 'AzureDataLakeStorage'"
+		},
 		"AzureDatabricks_accessToken": {
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'accessToken' de 'AzureDatabricks'"
@@ -15,9 +19,17 @@
 			"type": "secureString",
 			"metadata": "Cadeia de caracteres segura para 'functionKey' de 'AzureFunction'"
 		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://steamstorageaccount.dfs.core.windows.net/"
+		},
 		"AzureFunction_properties_typeProperties_functionAppUrl": {
 			"type": "string",
 			"defaultValue": "https://appfuncsteam.azurewebsites.net"
+		},
+		"trigger_details_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount"
 		}
 	},
 	"variables": {
@@ -25,7 +37,81 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline_steam')]",
+			"name": "[concat(parameters('factoryName'), '/ingesta-details')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "details",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
+						}
+					},
+					{
+						"name": "Ingesta-Incremental-details",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ingestao_incremental_details",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcedetails": {},
+									"sinkdetails": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "3c3acb56-c619-464b-9dce-14c843c7ef7f"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/ingestao_incremental_details')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingesta-playtime')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -49,17 +135,68 @@
 						}
 					},
 					{
-						"name": "DLT",
-						"type": "DatabricksJob",
+						"name": "Ingesta-Incremental-playtime",
+						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
 								"activity": "playtime",
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ingestao_incremental_playtime",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceplaytime": {},
+									"bronzeplaytime": {},
+									"sinkplaytime": {}
+								}
 							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "7d214cda-a082-4b52-b28f-173ccc33dfa3"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/ingestao_incremental_playtime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline_steam')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DLT",
+						"type": "DatabricksJob",
+						"dependsOn": [
 							{
-								"activity": "details",
+								"activity": "External Tables",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -82,9 +219,22 @@
 						}
 					},
 					{
-						"name": "details",
-						"type": "WebActivity",
-						"dependsOn": [],
+						"name": "External Tables",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Ingesta-playtime",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Ingesta-details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -94,9 +244,45 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": "https://appfuncsteam.azurewebsites.net/api/details?name=details"
+							"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/bronze/external-data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Ingesta-playtime",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ingesta-playtime",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Ingesta-details",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ingesta-details",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
 						}
 					}
 				],
@@ -107,8 +293,156 @@
 				"lastPublishTime": "2025-08-21T13:05:19Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
+				"[concat(variables('factoryId'), '/pipelines/ingesta-playtime')]",
+				"[concat(variables('factoryId'), '/pipelines/ingesta-details')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bronzedetails')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "bronze/details",
+						"fileSystem": "steam"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bronzeplaytime')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "bronze/playtime",
+						"fileSystem": "steam"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inboundetails')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "inbound/details",
+						"fileSystem": "steam"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inboundplaytime')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "inbound/playtime",
+						"fileSystem": "steam"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"appid": {
+							"type": "integer"
+						},
+						"playtime_forever": {
+							"type": "integer"
+						},
+						"playtime_windows_forever": {
+							"type": "integer"
+						},
+						"playtime_mac_forever": {
+							"type": "integer"
+						},
+						"playtime_linux_forever": {
+							"type": "integer"
+						},
+						"playtime_deck_forever": {
+							"type": "integer"
+						},
+						"rtime_last_played": {
+							"type": "integer"
+						},
+						"playtime_disconnected": {
+							"type": "integer"
+						},
+						"playtime_2weeks": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzureDatabricks')]",
@@ -158,7 +492,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/trigger_steam')]",
+			"name": "[concat(parameters('factoryName'), '/trigger_details')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -167,7 +501,37 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pipeline_steam",
+							"referenceName": "ingesta-details",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/steam/blobs/inbound/playtime",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('trigger_details_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/ingesta-details')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger_playtime')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "ingesta-playtime",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -178,7 +542,7 @@
 					"recurrence": {
 						"frequency": "Day",
 						"interval": 1,
-						"startTime": "2025-09-14T00:00:00",
+						"startTime": "2025-09-17T00:00:00",
 						"timeZone": "E. South America Standard Time",
 						"schedule": {
 							"minutes": [
@@ -192,7 +556,158 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pipeline_steam')]"
+				"[concat(variables('factoryId'), '/pipelines/ingesta-playtime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Docker-MySQL')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingestao_incremental_details')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "inboundetails",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedetails"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "bronzedetails",
+								"type": "DatasetReference"
+							},
+							"name": "sinkdetails"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     documentForm: 'singleDocument') ~> sourcedetails",
+						"sourcedetails sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkdetails"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/inboundetails')]",
+				"[concat(variables('factoryId'), '/datasets/bronzedetails')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingestao_incremental_playtime')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "inboundplaytime",
+								"type": "DatasetReference"
+							},
+							"name": "sourceplaytime"
+						},
+						{
+							"dataset": {
+								"referenceName": "bronzeplaytime",
+								"type": "DatasetReference"
+							},
+							"name": "bronzeplaytime"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "bronzeplaytime",
+								"type": "DatasetReference"
+							},
+							"name": "sinkplaytime"
+						}
+					],
+					"transformations": [
+						{
+							"name": "exists"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          appid as string,",
+						"          playtime_forever as string,",
+						"          playtime_windows_forever as string,",
+						"          playtime_mac_forever as string,",
+						"          playtime_linux_forever as string,",
+						"          playtime_deck_forever as string,",
+						"          rtime_last_played as string,",
+						"          playtime_disconnected as string,",
+						"          playtime_2weeks as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+						"source(output(",
+						"          appid as string,",
+						"          playtime_forever as string,",
+						"          playtime_windows_forever as string,",
+						"          playtime_mac_forever as string,",
+						"          playtime_linux_forever as string,",
+						"          playtime_deck_forever as string,",
+						"          rtime_last_played as string,",
+						"          playtime_disconnected as string,",
+						"          playtime_2weeks as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'parquet') ~> bronzeplaytime",
+						"sourceplaytime, bronzeplaytime exists(sourceplaytime@appid == bronzeplaytime@appid",
+						"     && sourceplaytime@rtime_last_played == bronzeplaytime@rtime_last_played,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> exists",
+						"exists sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/inboundplaytime')]",
+				"[concat(variables('factoryId'), '/datasets/bronzeplaytime')]"
 			]
 		}
 	]

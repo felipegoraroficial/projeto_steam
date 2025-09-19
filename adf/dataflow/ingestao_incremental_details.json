@@ -1,0 +1,44 @@
+{
+	"name": "ingestao_incremental_details",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "inboundetails",
+						"type": "DatasetReference"
+					},
+					"name": "sourcedetails"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "bronzedetails",
+						"type": "DatasetReference"
+					},
+					"name": "sinkdetails"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     documentForm: 'singleDocument') ~> sourcedetails",
+				"sourcedetails sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkdetails"
+			]
+		}
+	}
+}

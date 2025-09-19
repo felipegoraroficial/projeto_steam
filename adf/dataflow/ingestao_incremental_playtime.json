@@ -1,0 +1,85 @@
+{
+	"name": "ingestao_incremental_playtime",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "inboundplaytime",
+						"type": "DatasetReference"
+					},
+					"name": "sourceplaytime"
+				},
+				{
+					"dataset": {
+						"referenceName": "bronzeplaytime",
+						"type": "DatasetReference"
+					},
+					"name": "bronzeplaytime"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "bronzeplaytime",
+						"type": "DatasetReference"
+					},
+					"name": "sinkplaytime"
+				}
+			],
+			"transformations": [
+				{
+					"name": "exists"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          appid as string,",
+				"          playtime_forever as string,",
+				"          playtime_windows_forever as string,",
+				"          playtime_mac_forever as string,",
+				"          playtime_linux_forever as string,",
+				"          playtime_deck_forever as string,",
+				"          rtime_last_played as string,",
+				"          playtime_disconnected as string,",
+				"          playtime_2weeks as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     documentForm: 'arrayOfDocuments') ~> sourceplaytime",
+				"source(output(",
+				"          appid as string,",
+				"          playtime_forever as string,",
+				"          playtime_windows_forever as string,",
+				"          playtime_mac_forever as string,",
+				"          playtime_linux_forever as string,",
+				"          playtime_deck_forever as string,",
+				"          rtime_last_played as string,",
+				"          playtime_disconnected as string,",
+				"          playtime_2weeks as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'parquet') ~> bronzeplaytime",
+				"sourceplaytime, bronzeplaytime exists(sourceplaytime@appid == bronzeplaytime@appid",
+				"     && sourceplaytime@rtime_last_played == bronzeplaytime@rtime_last_played,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists",
+				"exists sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkplaytime"
+			]
+		}
+	}
+}
