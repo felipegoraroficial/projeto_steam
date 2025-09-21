@@ -27,6 +27,10 @@
 			"type": "string",
 			"defaultValue": "https://appfuncsteam.azurewebsites.net"
 		},
+		"triggermain_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount"
+		},
 		"trigger_details_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount"
@@ -109,6 +113,70 @@
 				"typeProperties": {}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline_steam')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DLT",
+						"type": "DatabricksJob",
+						"dependsOn": [
+							{
+								"activity": "External Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"jobId": "714447956434506"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "External Tables",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/bronze/external-data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-21T13:05:19Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/bronzedetails')]",
@@ -381,6 +449,36 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/triggermain')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline_steam",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/steam/blobs/bronze",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('triggermain_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline_steam')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ingesta-details')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -527,119 +625,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/ingestao_incremental_playtime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline_steam')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DLT",
-						"type": "DatabricksJob",
-						"dependsOn": [
-							{
-								"activity": "External Tables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"jobId": "714447956434506"
-						},
-						"linkedServiceName": {
-							"referenceName": "AzureDatabricks",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "External Tables",
-						"type": "DatabricksNotebook",
-						"dependsOn": [
-							{
-								"activity": "Ingesta-playtime",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "Ingesta-details",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/Repos/felipegoraro@outlook.com/projeto_steam/src/bronze/external-data"
-						},
-						"linkedServiceName": {
-							"referenceName": "AzureDatabricks",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Ingesta-playtime",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "ingesta-playtime",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Ingesta-details",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "ingesta-details",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-08-21T13:05:19Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
-				"[concat(variables('factoryId'), '/pipelines/ingesta-playtime')]",
-				"[concat(variables('factoryId'), '/pipelines/ingesta-details')]"
 			]
 		},
 		{
