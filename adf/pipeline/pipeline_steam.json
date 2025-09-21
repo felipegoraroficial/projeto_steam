@@ -32,20 +32,7 @@
 			{
 				"name": "External Tables",
 				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "Ingesta-playtime",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Ingesta-details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -60,38 +47,6 @@
 				"linkedServiceName": {
 					"referenceName": "AzureDatabricks",
 					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "Ingesta-playtime",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "ingesta-playtime",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "Ingesta-details",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "ingesta-details",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
 				}
 			}
 		],

@@ -1,0 +1,24 @@
+{
+	"name": "triggermain",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pipeline_steam",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/steam/blobs/bronze",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/da483b95-1caf-404c-bfe4-36abef87f6e6/resourceGroups/steamproject/providers/Microsoft.Storage/storageAccounts/steamstorageaccount",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
