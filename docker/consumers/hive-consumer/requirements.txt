@@ -1,0 +1,6 @@
+kafka-python
+python-dotenv
+pyhive
+thrift
+thrift-sasl
+pure-sasl

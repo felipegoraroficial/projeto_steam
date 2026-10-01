@@ -162,52 +162,6 @@ resource "azurerm_data_factory" "adf" {
   }
 }
 
-# Criação de um Server para o Azure Functions
-resource "azurerm_service_plan" "srvplan" {
-  name                = "steamservplan"
-  location            = azurerm_resource_group.rgroup.location
-  resource_group_name = azurerm_resource_group.rgroup.name
-  os_type             = "Linux"
-  sku_name            = "B1"
-
-}
-
-resource "azurerm_application_insights" "app_insights" {
-  name                = "steam-appinsights"
-  location            = azurerm_resource_group.rgroup.location
-  resource_group_name = azurerm_resource_group.rgroup.name
-  application_type    = "other"
-}
-
-resource "azurerm_linux_function_app" "funcsteam" {
-  name                       = "appfuncsteam"
-  location                   = azurerm_resource_group.rgroup.location
-  resource_group_name        = azurerm_resource_group.rgroup.name
-  storage_account_name       = azurerm_storage_account.stracc.name
-  storage_account_access_key = azurerm_storage_account.stracc.primary_access_key
-  service_plan_id            = azurerm_service_plan.srvplan.id
-
-  site_config {
-    application_stack {
-      python_version = "3.10"
-    }
-    cors {
-      allowed_origins = ["https://portal.azure.com"]
-    }
-  }
-
-  app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME"              = "python"
-    "AzureStorageConnection"                = azurerm_storage_account.stracc.primary_connection_string
-    "API_KEY"                               = var.steam_key
-    "STEAM_ID"                              = var.steam_id
-    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.app_insights.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.app_insights.connection_string
-
-  }
-}
-
-
 # Criação do Workspace do Databricks
 resource "azurerm_databricks_workspace" "databricks_workspace" {
   name                        = "steamdatabricks-workspace"
