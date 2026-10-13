@@ -1,15 +1,15 @@
 {
 	"name": "steamadf",
 	"properties": {
-		"globalConfigurations": {
-			"factoryStagingLSReferenceName": "AzureDataLakeStorage",
-			"factoryStagingLSType": "LinkedServiceReference"
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
 		}
 	},
 	"location": "australiaeast",
 	"identity": {
 		"type": "SystemAssigned",
-		"principalId": "ece394b1-682e-434c-bee2-3a328a32b8ee",
+		"principalId": "46707ea8-18fa-4ff6-b9ab-55e67aa914ef",
 		"tenantId": "1a7a4b2b-0e66-4ce2-b5cc-5916ccca0206"
 	}
 }
