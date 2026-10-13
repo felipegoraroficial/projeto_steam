@@ -1,0 +1,16 @@
+{
+	"name": "OdbcTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OdbcHive",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "OdbcTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "`steam`.`steam_games`"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

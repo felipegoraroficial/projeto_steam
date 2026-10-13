@@ -222,7 +222,7 @@ resource "databricks_secret_scope" "keyvault_scope" {
 
 # Criação de um usuário no Databricks
 resource "databricks_user" "felipe_user" {
-  user_name             = "felipegoraro@outlook.com"
+  user_name             = "felipegoraro@outlook.com.br"
   display_name          = "Felipe Pegoraro"
   workspace_access      = true
   databricks_sql_access = true
